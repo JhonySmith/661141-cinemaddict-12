@@ -137,7 +137,7 @@ const mostCommentedFilmsContainer = films.querySelector(`.most-commented`).query
 for (let i = 0; i < EXTRA_FILMS_COUNT; i++) {
   render(topRatedFilmsContainer, createFilmTemplate(), `beforeend`);
   render(mostCommentedFilmsContainer, createFilmTemplate(), `beforeend`);
-};
+}
 
 const createFooterStatisticTemplate = () => {
   return (
@@ -148,4 +148,4 @@ const createFooterStatisticTemplate = () => {
 };
 
 const footer = document.querySelector(`.footer`);
-render (footer, createFooterStatisticTemplate(), `beforeend`);
+render(footer, createFooterStatisticTemplate(), `beforeend`);
