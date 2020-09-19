@@ -8,8 +8,12 @@ import {createFilmsBoardTemplate} from "./view/films-board.js";
 import {createTopRatedFilmsTemplate} from "./view/top-rated-films.js";
 import {createMostCommentedFilmsTemplate} from "./view/most-commented-films.js";
 
+import {generateFilmCards} from "./mock/film.js";
+
 const FILMS_COUNT = 5;
 const EXTRA_FILMS_COUNT = 2;
+
+const films = generateFilmCards(FILMS_COUNT);
 
 const render = (container, template, place) => {
   container.insertAdjacentHTML(place, template);
@@ -23,27 +27,27 @@ render(main, createMainNavigationTemplate(), `beforeend`);
 render(main, createSortingTemplate(), `beforeend`);
 render(main, createFilmsBoardTemplate(), `beforeend`);
 
-const films = main.querySelector(`.films`);
+const filmsContainer = main.querySelector(`.films`);
 
-render(films, createAllFilmsListTemplate(), `beforeend`);
+render(filmsContainer, createAllFilmsListTemplate(), `beforeend`);
 
-const allFilms = films.querySelector(`.films-list`);
+const allFilms = filmsContainer.querySelector(`.films-list`);
 const allFilmsContainer = allFilms.querySelector(`.films-list__container`);
 
 for (let i = 0; i < FILMS_COUNT; i++) {
-  render(allFilmsContainer, createFilmTemplate(), `beforeend`);
+  render(allFilmsContainer, createFilmTemplate(films[i]), `beforeend`);
 }
 
 render(allFilms, createShowMoreButtonTemplate(), `beforeend`);
-render(films, createTopRatedFilmsTemplate(), `beforeend`);
-render(films, createMostCommentedFilmsTemplate(), `beforeend`);
+render(filmsContainer, createTopRatedFilmsTemplate(), `beforeend`);
+render(filmsContainer, createMostCommentedFilmsTemplate(), `beforeend`);
 
-const topRatedFilmsContainer = films.querySelector(`.top-rated`).querySelector(`.films-list__container`);
-const mostCommentedFilmsContainer = films.querySelector(`.most-commented`).querySelector(`.films-list__container`);
+const topRatedFilmsContainer = filmsContainer.querySelector(`.top-rated`).querySelector(`.films-list__container`);
+const mostCommentedFilmsContainer = filmsContainer.querySelector(`.most-commented`).querySelector(`.films-list__container`);
 
 for (let i = 0; i < EXTRA_FILMS_COUNT; i++) {
-  render(topRatedFilmsContainer, createFilmTemplate(), `beforeend`);
-  render(mostCommentedFilmsContainer, createFilmTemplate(), `beforeend`);
+  render(topRatedFilmsContainer, createFilmTemplate(films[i]), `beforeend`);
+  render(mostCommentedFilmsContainer, createFilmTemplate(films[i]), `beforeend`);
 }
 
 const createFooterStatisticTemplate = () => {
