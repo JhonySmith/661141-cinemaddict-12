@@ -2,15 +2,13 @@ import {createCommentsTemplate} from "./comments";
 import AbstractSmart from "./abstract-smart.js";
 // Карточка с деталями фильма
 
-const createFilmDetailsTemplate = (film, commentEmoji) => {
+const createFilmDetailsTemplate = (film, comments, commentEmoji) => {
   const title = film.title;
   const originalTitle = film.originalTitle;
   const poster = film.poster;
   const director = film.director;
   const description = film.description;
-  const commentsCount = film.commentsCount;
   const rating = film.rating;
-  const comments = film.comments;
   const commentsTemplate = createCommentsTemplate(comments);
   const movieDuration = film.movieDuration;
   const screenwriter = film.screenwriter;
@@ -28,7 +26,7 @@ const createFilmDetailsTemplate = (film, commentEmoji) => {
           </div>
           <div class="film-details__info-wrap">
             <div class="film-details__poster">
-              <img class="film-details__poster-img" src="./images/posters/${poster}" alt="">
+              <img class="film-details__poster-img" src="${poster}" alt="">
               <p class="film-details__age">18+</p>
             </div>
             <div class="film-details__info">
@@ -90,7 +88,7 @@ const createFilmDetailsTemplate = (film, commentEmoji) => {
         </div>
         <div class="form-details__bottom-container">
           <section class="film-details__comments-wrap">
-            <h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${commentsCount}</span></h3>
+            <h3 class="film-details__comments-title">Comments <span class="film-details__comments-count">${comments.length}</span></h3>
             ${commentsTemplate}
             <div class="film-details__new-comment">
                 <div for="add-emoji" class="film-details__add-emoji-label">
@@ -127,10 +125,11 @@ const createFilmDetailsTemplate = (film, commentEmoji) => {
 };
 
 export default class FilmDetails extends AbstractSmart {
-  constructor(film) {
+  constructor(film, comments) {
     super();
 
     this._film = film;
+    this._comments = comments;
 
     this._onObjectClick = null;
     this.commentEmoji = null;
@@ -143,7 +142,7 @@ export default class FilmDetails extends AbstractSmart {
   }
 
   getTemplate() {
-    return createFilmDetailsTemplate(this._film, this.commentEmoji);
+    return createFilmDetailsTemplate(this._film, this._comments);
   }
 
   restoreHandlers() {
@@ -207,6 +206,20 @@ export default class FilmDetails extends AbstractSmart {
 
     this.getElement().querySelector(`.film-details__control-label--favorite`)
       .addEventListener(`click`, this._addToFavoriteListClickHandler);
+  }
+
+  setDelelteClick(onClick) {
+    this.getElement().querySelectorAll(`.film-details__comment-delete`)
+      .forEach((delButton) => {
+        delButton.addEventListener(`click`, (evt) => {
+          evt.preventDefault();
+          const commentId = evt.target.closest(`li`).dataset.id;
+          const button = evt.target.closest(`button`);
+          button.textContent = `Deleting...`;
+          button.disabled = true;
+          onClick(commentId);
+        });
+      });
   }
 
   _subscribeOnEvents() {

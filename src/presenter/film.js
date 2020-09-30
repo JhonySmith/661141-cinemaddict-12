@@ -1,12 +1,15 @@
 import FilmView from "../view/film.js";
+import CommentsModel from "../models/comments.js";
 import FilmDetailsView from "../view/film-details.js";
 
 import {render, remove, replace, RenderPosition} from "../utils.js";
 
 export default class FilmPresenter {
-  constructor(container, changeData) {
+  constructor(container, changeData, api, dataUpdate) {
+    this._api = api;
     this._container = container;
     this._changeData = changeData;
+    this._dataUpdate = dataUpdate;
     this._filmCardComponent = null;
     this._filmDetailsComponent = null;
 
@@ -17,6 +20,7 @@ export default class FilmPresenter {
     this._handleAddToWatchListClick = this._handleAddToWatchListClick.bind(this);
     this._handleMarkAsWatchedClick = this._handleMarkAsWatchedClick.bind(this);
     this._handleAddToFavoriteListClick = this._handleAddToFavoriteListClick.bind(this);
+    this._handleDeleteComment = this._handleDeleteComment.bind(this);
     this._film = null;
   }
 
@@ -35,6 +39,7 @@ export default class FilmPresenter {
 
     if (prevFilmCardComponent === null) {
       render(this._container, this._filmCardComponent, RenderPosition.BEFOREEND);
+
       return;
     }
 
@@ -44,28 +49,59 @@ export default class FilmPresenter {
 
     const pageBody = document.querySelector(`body`);
 
+    if (prevFilmDetailsComponent === null) {
+      return;
+    }
+
     if (pageBody.contains(prevFilmDetailsComponent.getElement())) {
-      this._createFilmDetails();
-      replace(this._filmDetailsComponent, prevFilmDetailsComponent);
-      remove(prevFilmDetailsComponent);
+      const commentsModel = new CommentsModel();
+
+      this._api.getComments(this._film.id)
+        .then((comments) => {
+          commentsModel.setComments(comments);
+        })
+        .catch(() => {
+          commentsModel.setComments([]);
+        })
+        .finally(() => {
+          this._createFilmDetails(commentsModel.getComments());
+          replace(this._filmDetailsComponent, prevFilmDetailsComponent);
+          remove(prevFilmDetailsComponent);
+        });
     }
   }
 
-  _createFilmDetails() {
-    this._filmDetailsComponent = new FilmDetailsView(this._film);
-
+  _createFilmDetails(comments) {
+    this._filmDetailsComponent = new FilmDetailsView(this._film, comments);
     this._filmDetailsComponent.setCloseButtonClickHandler(this._closeFilmDetails);
     this._filmDetailsComponent.setAddToWatchListClickHandler(this._handleAddToWatchListClick);
     this._filmDetailsComponent.setMarkAsWatchedClickHandler(this._handleMarkAsWatchedClick);
     this._filmDetailsComponent.setAddToFavoriteListClickHandler(this._handleAddToFavoriteListClick);
-
+    this._filmDetailsComponent.setDelelteClick(this._handleDeleteComment);
     document.addEventListener(`keydown`, this._onEscKeyDown);
+
+  }
+
+  _handleDeleteComment(id) {
+    this._api.deleteComment(id);
+    this._dataUpdate(this._film);
   }
 
   _openFilmDetails() {
-    this._createFilmDetails();
-    const pageBody = document.querySelector(`body`);
-    render(pageBody, this._filmDetailsComponent, RenderPosition.BEFOREEND);
+    const commentsModel = new CommentsModel();
+
+    this._api.getComments(this._film.id)
+      .then((comments) => {
+        commentsModel.setComments(comments);
+      })
+      .catch(() => {
+        commentsModel.setComments([]);
+      })
+      .finally(() => {
+        this._createFilmDetails(commentsModel.getComments());
+        const pageBody = document.querySelector(`body`);
+        render(pageBody, this._filmDetailsComponent, RenderPosition.BEFOREEND);
+      });
   }
 
   _onEscKeyDown(evt) {
