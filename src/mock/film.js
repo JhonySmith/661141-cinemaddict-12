@@ -34,6 +34,7 @@ const generateDescriptoin = (texts) => {
 };
 
 const generateFilmCardData = () => {
+  const id = Date.now() + parseInt(Math.random() * 10000, 10);
   const title = getRandomArrElement(titles);
   const originalTitle = getRandomArrElement(titles);
   const rating = (Math.floor(Math.random() * 100)) / 10;
@@ -52,6 +53,7 @@ const generateFilmCardData = () => {
 
 
   return {
+    id,
     title,
     originalTitle,
     rating,

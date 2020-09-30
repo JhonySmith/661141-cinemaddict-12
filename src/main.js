@@ -18,4 +18,4 @@ const boardPresenter = new BoardPresenter(main);
 boardPresenter.init(films);
 
 const footer = document.querySelector(`.footer`);
-render(footer, new FooterStatisticView(), `beforeend`);
+render(footer, new FooterStatisticView(films), `beforeend`);
