@@ -1,4 +1,7 @@
 import FilmPresenter from "./film.js";
+import FilmModel from "../models/film.js";
+import FilmsModel from "../models/films.js";
+import moment from "moment";
 
 import NavigationView from "../view/navigation.js";
 import SortingView, {SortType} from "../view/sorting.js";
@@ -14,8 +17,10 @@ import {render, remove, RenderPosition, updateItem} from "../utils.js";
 import {SUB_FILMS_COUNT, FILMS_NUMBER_STEP} from "../common/constants.js";
 
 export default class Board {
-  constructor(boardContainer) {
+  constructor(boardContainer, filmsModel, api) {
     this._container = boardContainer;
+    this._filmsModel = filmsModel;
+    this._api = api;
 
     this._navigationComponent = null;
     this._sortingComponent = new SortingView();
@@ -41,16 +46,17 @@ export default class Board {
     this._showingFilms = null;
 
     this._handleFilmChange = this._handleFilmChange.bind(this);
+    this._onDataUpdate = this._onDataUpdate.bind(this);
   }
 
-  init(films) {
-    this._films = films;
-    this._showingFilms = films;
-    this._navigationComponent = new NavigationView(films);
+  init() {
+    this._films = this._filmsModel.getFilms();
+    this._showingFilms = this._filmsModel.getFilms();
+    this._navigationComponent = new NavigationView(this._films);
     this._renderFilmsBoard();
 
-    if (films.length) {
-      this._renderFilms(films);
+    if (this._films.length) {
+      this._renderFilms(this._films);
     } else {
       this._renderNoFilms();
     }
@@ -58,6 +64,7 @@ export default class Board {
 
   _renderFilms() {
     this._renderAllFilms();
+    render(this._allFilmsComponent, this._allFilmsContainerComponent, RenderPosition.BEFOREEND);
     if (this._showFilmsCount < this._films.length) {
       this._renderShowMoreButton();
     }
@@ -68,13 +75,30 @@ export default class Board {
       .forEach((film) => {
         this._renderFilmCard(film, this._allFilmsContainerComponent);
       });
-    render(this._allFilmsComponent, this._allFilmsContainerComponent, RenderPosition.BEFOREEND);
   }
 
   _handleFilmChange(updatedFilm) {
     this._films = updateItem(this._films, updatedFilm);
     this._showingFilms = updateItem(this._showingFilms, updatedFilm);
     this._filmPresenter[updatedFilm.id].init(updatedFilm);
+
+    const newFilm = FilmModel.toServer(updatedFilm);
+    this._api.updateFilm(updatedFilm.id, newFilm);
+  }
+
+  _onDataUpdate(film) {
+    const newData = new FilmsModel();
+
+    this._api.getFilms()
+      .then((films) => {
+        newData.setFilms(films);
+      })
+      .catch(() => {
+        newData.setFilms([]);
+      })
+      .finally(() => {
+        this._filmPresenter[film.id].init(newData.getFilms()[film.id]);
+      });
   }
 
   _renderTopRatedFilms() {
@@ -93,7 +117,7 @@ export default class Board {
 
 
   _renderFilmCard(film, container) {
-    const filmPresenter = new FilmPresenter(container, this._handleFilmChange);
+    const filmPresenter = new FilmPresenter(container, this._handleFilmChange, this._api, this._onDataUpdate);
     filmPresenter.init(film);
     this._filmPresenter[film.id] = filmPresenter;
   }
@@ -119,7 +143,7 @@ export default class Board {
 
     switch (sortType) {
       case SortType.DATE:
-        sortedFilms = copyOfFilms.sort((a, b) => b.releaseDate - a.releaseDate);
+        sortedFilms = copyOfFilms.sort((a, b) => moment(b.releaseDate).format(`YYYY`) - moment(a.releaseDate).format(`YYYY`));
         break;
       case SortType.RATING:
         sortedFilms = copyOfFilms.sort((a, b) => b.rating - a.rating);

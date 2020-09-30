@@ -1,11 +1,14 @@
+import moment from "moment";
+
 const createCommentMarkup = (comment) => {
-  const authorName = comment.authorName;
+  const id = comment.id;
+  const authorName = comment.author;
   const emotion = comment.emotion;
-  const commentText = comment.commentText;
-  const date = comment.date;
+  const commentText = comment.comment;
+  const date = moment(comment.date).fromNow();
 
   return (
-    `<li class="film-details__comment">
+    `<li class="film-details__comment" data-id="${id}">
       <span class="film-details__comment-emoji">
         <img src="./images/emoji/${emotion}.png" width="55" height="55" alt="emoji-${emotion}">
       </span>
